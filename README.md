@@ -6,7 +6,7 @@ By default, google.com is pinged every 5 seconds while the app is enabled. Pingi
 
 ## Quick links
 
-- [VueJS 2.0 RC Docs](http://vuejs.org/guide/)
+- [VueJS 2.0 Docs](http://vuejs.org/guide/)
 - [Primer CSS](http://primercss.io/)
 
 ### Example
