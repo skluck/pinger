@@ -1,0 +1,118 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://unpkg.com/primer-css@4.2.0/build/build.css"/>
+        <script src="https://unpkg.com/vue@2.0.0/dist/vue.min.js"></script>
+    </head>
+    <body>
+        <div class="container my-5">
+            <div id="app">
+                <div class="clearfix">
+                    <button
+                        class="btn right"
+                        @click="pingOn = !pingOn"
+                        :class="{ 'btn-primary': !pingOn, 'btn-danger': pingOn }"
+                        >{{ !pingOn ? 'Enable pinger' : 'Disable pinger' }}</button>
+                    <h1>Test Pinger</h1>
+                </div>
+                <template v-if="hasPings">
+                    <ping v-for="ping in pings" :ping="ping"></ping>
+                </template>
+                <template v-else>
+                    <div class="blankslate blankslate-spacious">
+                        <h3>No pings found.</h3>
+                        <p>Enable pinger to start pings.</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <script>
+
+            Vue.component('ping', {
+                template: '#ping',
+                props: ['ping']
+            });
+
+            var app = new Vue({
+                el: '#app',
+
+                data: {
+                    pingOn: true,
+                    pingRate: 5000,
+                    checkRate: 1500,
+                    servers: ['google.com'],
+                    pings: {}
+                },
+                computed: {
+                    hasPings: function() {
+                        return (Object.keys(this.pings).length > 0);
+                    }
+                },
+                created: function() {
+                    setInterval(this.pingify, this.pingRate);
+                },
+                methods: {
+                    uuid: function() {
+                        var min = 100000,
+                            max = 900000;
+
+                        return Math.floor(Math.random()*(max-min+1)+min);
+                    },
+                    pingify: function() {
+                        if (!this.pingOn) { return; }
+                        this.servers.forEach(this.ping);
+                    },
+
+                    ping: function(hostname) {
+                        var id = this.uuid(),
+                            full_url = "http://" + hostname + '/favicon.ico?cb=' + id,
+                            ping = {
+                            server: hostname,
+                            url: full_url,
+                            text: 'Pending',
+                            status: 'flash-warn'
+                        };
+
+                        this.$set(this.pings, id, ping);
+                        this.pong(id, full_url);
+                    },
+                    pong: function(id, url) {
+                        if (this.pings[id].text !== 'Pending') { return; }
+
+                        var that = this,
+                            img = new Image(),
+                            loaded = function () {
+                                that.pings[id].text = 'Responded';
+                                that.pings[id].status = 'flash-success';
+                            },
+                            error = function() {
+                                if (that.pings[id].text !== 'Pending') { return; }
+
+                                that.pings[id].text = 'No response';
+                                that.pings[id].status = 'flash-error';
+                            },
+                            timeout = function () {
+                                if (that.pings[id].text !== 'Pending') { return; }
+
+                                that.pings[id].text = 'Timeout';
+                                that.pings[id].status = 'flash-error';
+                            };
+                        
+                        img.onload = loaded;
+                        img.onerror = error;
+                        img.src = url;
+
+                        var timer = setTimeout(timeout, this.checkRate);
+                   }
+                }
+            });
+        </script>
+
+        <script type="text/x-template" id="ping">
+            <div class="flash clearfix my-3" :class="ping.status">
+                <b>Server:</b> <a :href="ping.url">{{ ping.server }}</a>
+                <span class="state right">{{ ping.text }}</span>
+            </div>
+        </script>
+    </body>
+</html>
